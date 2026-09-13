@@ -34,6 +34,8 @@ USE_TZ = True
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+
 # Rate limiting. Per-tenant limits live in the tenant_tiers table; these are the fallbacks.
 RATE_LIMIT_WINDOW_SECONDS = int(os.environ.get("RATE_LIMIT_WINDOW_SECONDS", "60"))
 DEFAULT_RATE_LIMIT = int(os.environ.get("DEFAULT_RATE_LIMIT", "100"))
