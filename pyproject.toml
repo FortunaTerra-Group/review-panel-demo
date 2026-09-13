@@ -1,0 +1,13 @@
+[project]
+name = "acme-metrics-api"
+version = "0.3.0"
+description = "Fictional multi-tenant metrics ingestion API used to demonstrate a pre-PR review panel."
+requires-python = ">=3.10"
+dependencies = ["django>=5,<6", "redis>=5"]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-django", "fakeredis[lua]>=2.20"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "acme_metrics.settings"
+testpaths = ["tests"]
