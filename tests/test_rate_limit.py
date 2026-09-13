@@ -1,6 +1,5 @@
 import pytest
 from django.conf import settings
-from django.core.cache import cache
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
@@ -24,7 +23,6 @@ class FakeClock:
 def fixed_clock(monkeypatch):
     c = FakeClock()
     monkeypatch.setattr(clock, "now", c)
-    cache.clear()
     return c
 
 
@@ -153,3 +151,60 @@ def test_429_carries_retry_after(client, tenants):
         get(client, tenants["retail"])
     r = get(client, tenants["retail"])
     assert r.status_code == 429 and r["Retry-After"] == str(settings.RATE_LIMIT_WINDOW_SECONDS)
+
+
+@pytest.mark.django_db
+def test_unlimited_list_takes_precedence_over_a_tier_row(client, tenants):
+    from metrics.models import TenantTier
+    TenantTier.objects.create(tenant_id="tenant-enterprise-01", tier="enterprise", rate_limit=1)
+    assert all(get(client, tenants["enterprise"]).status_code == 200 for _ in range(10))
+
+
+def test_redis_client_carries_the_configured_timeouts(monkeypatch):
+    from metrics import redis_client
+    seen = {}
+
+    def record(cls, url, **kwargs):
+        seen.update(kwargs)
+        return object()
+
+    monkeypatch.setattr(redis_client.redis.Redis, "from_url", classmethod(record))
+    redis_client.get_redis.cache_clear()
+    redis_client.get_redis()
+    redis_client.get_redis.cache_clear()
+    assert seen["socket_timeout"] == seen["socket_connect_timeout"] == settings.REDIS_TIMEOUT_SECONDS
+
+
+@pytest.mark.django_db
+def test_a_stalled_redis_fails_closed_within_the_timeout(client, tenants, monkeypatch, settings):
+    # Physical predicate: a socket that accepts and never replies. The conftest fake is undone
+    # for this test so the real client, with the real timeouts, is what stalls.
+    import socket, threading, time as _time
+    from metrics import redis_client
+
+    srv = socket.socket(); srv.bind(("127.0.0.1", 0)); srv.listen(5)
+    port = srv.getsockname()[1]
+    held = []
+
+    def hold():
+        while True:
+            try:
+                conn, _ = srv.accept(); held.append(conn)
+            except OSError:
+                return
+
+    threading.Thread(target=hold, daemon=True).start()
+    monkeypatch.undo()
+    settings.REDIS_URL = f"redis://127.0.0.1:{port}/0"
+    redis_client.get_redis.cache_clear()
+    try:
+        t0 = _time.monotonic()
+        r = get(client, tenants["retail"])
+        elapsed = _time.monotonic() - t0
+    finally:
+        redis_client.get_redis.cache_clear()
+        srv.close()
+        for c in held:
+            c.close()
+    assert r.status_code == 503
+    assert elapsed < settings.REDIS_TIMEOUT_SECONDS * 4

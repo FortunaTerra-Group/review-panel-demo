@@ -39,10 +39,12 @@ REDIS_TIMEOUT_SECONDS = float(os.environ.get("REDIS_TIMEOUT_SECONDS", "0.5"))
 # from config because LocMemCache's default of 300 entries would put the tier query back on the
 # hot path once more than ~300 tenants are active in a window.
 CACHES = {
-    "default": {
+    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+    "tier_limits": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "tier-limits",
         "OPTIONS": {"MAX_ENTRIES": int(os.environ.get("TIER_CACHE_MAX_ENTRIES", "10000"))},
-    }
+    },
 }
 
 # Rate limiting. Per-tenant limits live in the tenant_tiers table; these are the fallbacks.

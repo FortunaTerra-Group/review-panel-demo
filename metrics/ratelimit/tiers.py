@@ -1,9 +1,10 @@
 from django.conf import settings
-from django.core.cache import cache
+from django.core.cache import caches
 
 from metrics.models import TenantTier
 
 CACHE_TTL_SECONDS = 60
+cache = caches["tier_limits"]
 
 
 def _cache_key(tenant_id: str) -> str:

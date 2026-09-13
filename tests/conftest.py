@@ -6,6 +6,14 @@ from metrics.models import ApiKey, TenantTier
 
 
 @pytest.fixture(autouse=True)
+def clear_tier_cache():
+    from django.core.cache import caches
+    caches["tier_limits"].clear()
+    yield
+    caches["tier_limits"].clear()
+
+
+@pytest.fixture(autouse=True)
 def fake_redis(monkeypatch):
     """Every test gets its own Redis. Patched at the connection factory so every importer sees it."""
     server = fakeredis.FakeServer()
