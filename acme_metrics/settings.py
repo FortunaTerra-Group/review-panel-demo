@@ -16,6 +16,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "metrics.middleware.auth.ApiKeyAuthMiddleware",
     "metrics.middleware.global_limit.GlobalRateLimitMiddleware",
+    "metrics.middleware.rate_limit.TenantRateLimitMiddleware",
 ]
 
 ROOT_URLCONF = "acme_metrics.urls"
