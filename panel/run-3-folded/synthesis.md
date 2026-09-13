@@ -13,7 +13,7 @@
 
 No BLOCK. Four lenses converged on one required change: the Redis timeouts added in the run-2 fold are correct (three lenses measured 0.50 s against a real silent or black-holed socket) but invisible to the suite, because the test fixture swaps the client factory with a lambda that discards keyword arguments. Two lenses independently expected redis-py's default retry policy to multiply the stall, measured it, and dropped the finding. That refute-before-report step is part of the skill's procedure.
 
-## Fold (commit `412b7e3`, the branch tip)
+## Fold (commit `f9bac6a`, the branch tip)
 
 - `CACHES["tier_limits"]` alias with the env-sized `MAX_ENTRIES`; `tiers.py` binds to it; `default` cache left at Django's default for future users.
 - `clear_tier_cache` autouse fixture in `tests/conftest.py`; the module-local `cache.clear()` removed.
