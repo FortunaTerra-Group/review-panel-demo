@@ -14,7 +14,11 @@ walkthrough video.
   Its defects were seeded so the skill has something to find; the list is deliberately not in
   this README, so that running the panel yourself is a fair test. The skill repository's
   worked example has the full transcript, including what the panel found that was not seeded.
-- `feat/per-tenant-rate-limit-folded`: the same branch after the panel's findings were folded.
+- `feat/per-tenant-rate-limit-folded`: the same branch after the panel's findings were folded,
+  three times (the panel was rerun after each fold; see `panel/`).
+
+`panel/` holds the full output of every lens from all three runs, the briefs they were given, and
+a synthesis per run. Every file there is Claude Opus 5 output from 2026-09-12 and says so.
 
 Run the panel yourself:
 
