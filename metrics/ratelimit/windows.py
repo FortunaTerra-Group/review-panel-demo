@@ -15,4 +15,4 @@ return 0
 
 def allow(redis, tenant_id: str, now: float, window_seconds: int, limit: int, request_id: str) -> bool:
     """True if this request fits within `limit` over the trailing `window_seconds`."""
-    return redis.eval(SLIDING_WINDOW, 1, f"ratelimit:{tenant_id}", now, window_seconds, limit, request_id) == 1
+    return redis.eval(SLIDING_WINDOW, 1, f"ratelimit:tenant:{tenant_id}", now, window_seconds, limit, request_id) == 1

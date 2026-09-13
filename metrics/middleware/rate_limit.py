@@ -21,7 +21,7 @@ class TenantRateLimitMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        tenant = getattr(request, "tenant_id", None)
+        tenant = request.tenant_id  # raises if auth did not run first: a mis-ordered chain must fail loudly
         if tenant is None or tenant in settings.UNLIMITED_TIER_TENANTS:
             return self.get_response(request)
         window = settings.RATE_LIMIT_WINDOW_SECONDS

@@ -22,5 +22,7 @@ def limit_for(tenant_id: str) -> int:
 
 
 def invalidate(tenant_id: str) -> None:
-    """Called by the wave-2 admin endpoint when a tenant's limit changes."""
+    """Drop the cached limit in this process. The cache is process-local, so other workers keep
+    the old value until CACHE_TTL_SECONDS elapses; the wave-2 admin endpoint may call this as a
+    local fast path but must not present it as immediate propagation."""
     cache.delete(_cache_key(tenant_id))

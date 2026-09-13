@@ -33,8 +33,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 USE_TZ = True
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+REDIS_TIMEOUT_SECONDS = float(os.environ.get("REDIS_TIMEOUT_SECONDS", "0.5"))
 
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+# Tier-limit cache. Process-local by design; workers converge within CACHE_TTL_SECONDS. Sized
+# from config because LocMemCache's default of 300 entries would put the tier query back on the
+# hot path once more than ~300 tenants are active in a window.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "OPTIONS": {"MAX_ENTRIES": int(os.environ.get("TIER_CACHE_MAX_ENTRIES", "10000"))},
+    }
+}
 
 # Rate limiting. Per-tenant limits live in the tenant_tiers table; these are the fallbacks.
 RATE_LIMIT_WINDOW_SECONDS = int(os.environ.get("RATE_LIMIT_WINDOW_SECONDS", "60"))
@@ -43,5 +52,7 @@ GLOBAL_UNAUTHENTICATED_LIMIT = int(os.environ.get("GLOBAL_UNAUTHENTICATED_LIMIT"
 
 # Fixed, known list of tenants on the unlimited tier. Enforcement must never apply to them.
 UNLIMITED_TIER_TENANTS = frozenset(
-    t for t in os.environ.get("UNLIMITED_TIER_TENANTS", "tenant-enterprise-01,tenant-enterprise-02").split(",") if t
+    t.strip()
+    for t in os.environ.get("UNLIMITED_TIER_TENANTS", "tenant-enterprise-01,tenant-enterprise-02").split(",")
+    if t.strip()
 )
