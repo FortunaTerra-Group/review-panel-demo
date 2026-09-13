@@ -2,6 +2,7 @@ import pytest
 from django.conf import settings
 
 
+@pytest.mark.django_db
 def test_public_path_is_counted_with_a_window(client, fake_redis):
     client.get("/healthz")
     keys = fake_redis.keys("ratelimit:global:*")
